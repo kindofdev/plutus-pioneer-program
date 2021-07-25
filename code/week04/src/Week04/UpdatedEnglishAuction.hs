@@ -17,7 +17,7 @@
 
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
-module Week01.EnglishAuction where
+module Week04.UpdatedEnglishAuction where
 
 import           Control.Monad        hiding (fmap)
 import           Data.Aeson           (ToJSON, FromJSON)
@@ -45,7 +45,7 @@ import           Text.Printf          (printf)
 data Auction = Auction
     { aSeller   :: !PubKeyHash
     , aDeadline :: !POSIXTime
-    , aMinBid   :: !IntegerTrace
+    , aMinBid   :: !Integer
     , aCurrency :: !CurrencySymbol
     , aToken    :: !TokenName
     } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
@@ -159,7 +159,7 @@ mkAuctionValidator ad redeemer ctx =
             Nothing   -> traceError "wrong output type"
             Just h -> case findDatum h info of
                 Nothing        -> traceError "datum not found"
-                Just (Datum d) ->  case PlutusTx.fromData d of
+                Just (Datum d) ->  case PlutusTx.fromBuiltinData d of
                     Just ad' -> (o, ad')
                     Nothing  -> traceError "error decoding data"
         _   -> traceError "expected exactly one continuing output"
@@ -262,6 +262,10 @@ bid :: forall w s. BidParams -> Contract w s Text ()
 bid BidParams{..} = do
     (oref, o, d@AuctionDatum{..}) <- findAuction bpCurrency bpToken
     logInfo @String $ printf "found auction utxo with datum %s" (show d)
+    -- NEW : Check deadline
+    now <- currentTime
+    when (now >= aDeadline adAuction) $ 
+        throwError $ pack $ printf "too late, deadline has been reached"     
 
     when (bpBid < minBid d) $
         throwError $ pack $ printf "bid lower than minimal bid %d" (minBid d)
@@ -269,18 +273,23 @@ bid BidParams{..} = do
     let b  = Bid {bBidder = pkh, bBid = bpBid}
         d' = d {adHighestBid = Just b}
         v  = Value.singleton bpCurrency bpToken 1 <> Ada.lovelaceValueOf bpBid
-        r  = Redeemer $ PlutusTx.toData $ MkBid b
+        r  = Redeemer $ PlutusTx.toBuiltinData $ MkBid b
 
         lookups = Constraints.typedValidatorLookups auctionTypedValidator <>
                   Constraints.otherScript auctionValidator                <>
                   Constraints.unspentOutputs (Map.singleton oref o)
         tx      = case adHighestBid of
                     Nothing      -> mustPayToTheScript d' v                            <>
-                                    mustValidateIn (to $ aDeadline adAuction)          <>
+                                {-  This expression from week1 FAILS with Plutus checkout week4
+                                    mustValidateIn (to $ aDeadline adAuction)       <>
+                                -}
+                                    mustValidateIn (to now)          <>  -- Same approach as Homework1 week3 
                                     mustSpendScriptOutput oref r
                     Just Bid{..} -> mustPayToTheScript d' v                            <>
                                     mustPayToPubKey bBidder (Ada.lovelaceValueOf bBid) <>
-                                    mustValidateIn (to $ aDeadline adAuction)          <>
+                                    -- Same here
+                                    -- mustValidateIn (to $ aDeadline adAuction)       <>
+                                    mustValidateIn (to now)          <>
                                     mustSpendScriptOutput oref r
     ledgerTx <- submitTxConstraintsWith lookups tx
     void $ awaitTxConfirmed $ txId ledgerTx
@@ -296,7 +305,7 @@ close CloseParams{..} = do
     logInfo @String $ printf "found auction utxo with datum %s" (show d)
 
     let t      = Value.singleton cpCurrency cpToken 1
-        r      = Redeemer $ PlutusTx.toData Close
+        r      = Redeemer $ PlutusTx.toBuiltinData Close
         seller = aSeller adAuction
 
         lookups = Constraints.typedValidatorLookups auctionTypedValidator <>
@@ -329,7 +338,7 @@ findAuction cs tn = do
             Nothing   -> throwError "unexpected out type"
             Just h -> case Map.lookup h $ txData $ txOutTxTx o of
                 Nothing        -> throwError "datum not found"
-                Just (Datum e) -> case PlutusTx.fromData e of
+                Just (Datum e) -> case PlutusTx.fromBuiltinData e of
                     Nothing -> throwError "datum has wrong type"
                     Just d@AuctionDatum{..}
                         | aCurrency adAuction == cs && aToken adAuction == tn -> return (oref, o, d)
