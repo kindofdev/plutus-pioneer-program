@@ -22,7 +22,7 @@ import Ledger.Value
 
 import Week04.UpdatedEnglishAuction
 
--- Token goes to w3 (bid w3 > bid w2 > minimum bid)
+-- Token goes to w3 (minimum bid < bid w2 < bid w3 )
 {- 
     Final balances
     Wallet 1: 
@@ -67,7 +67,7 @@ scenario1 = do
     void $ Emulator.waitNSlots 1  
     Extras.logInfo @String "DONE"
 
--- Token goes to w2 (w3 bid < minimum bid)
+-- Token goes to w2 (w3 bid < minimum bid < w2 bid)
 {-
     Final balances
     Wallet 1: 
@@ -84,7 +84,7 @@ scenario2 = do
     h2 <- activateContractWallet w2 endpoints
     h3 <- activateContractWallet w3 endpoints
     callEndpoint @"start" h1 $ StartParams 
-        { spDeadline    = slotToBeginPOSIXTime def 10
+        { spDeadline    = slotToBeginPOSIXTime def 10for
         , spMinBid      = 100000000
         , spCurrency    = myTokenSymbol
         , spToken       = myTokenName
@@ -106,13 +106,13 @@ scenario2 = do
     void $ Emulator.waitUntilSlot 11  
 
     callEndpoint @"close" h1 $ CloseParams 
-        { cpCurrency    = myTokenSymbol
+        { cpCurrency    = myTokenSymbolfor
         , cpToken       = myTokenName
         }
     void $ Emulator.waitNSlots 1  
     Extras.logInfo @String "DONE"
 
--- Token goes to w1 (no bids)
+-- Token goes back to w1 (no bids)
 {-
     Final balances
     Wallet 1: 
