@@ -45,7 +45,7 @@ import           Text.Printf          (printf)
 data Auction = Auction
     { aSeller   :: !PubKeyHash
     , aDeadline :: !POSIXTime
-    , aMinBid   :: !IntegerTrace
+    , aMinBid   :: !Integer
     , aCurrency :: !CurrencySymbol
     , aToken    :: !TokenName
     } deriving (Show, Generic, ToJSON, FromJSON, ToSchema)
