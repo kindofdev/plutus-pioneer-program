@@ -84,7 +84,7 @@ scenario2 = do
     h2 <- activateContractWallet w2 endpoints
     h3 <- activateContractWallet w3 endpoints
     callEndpoint @"start" h1 $ StartParams 
-        { spDeadline    = slotToBeginPOSIXTime def 10for
+        { spDeadline    = slotToBeginPOSIXTime def 10
         , spMinBid      = 100000000
         , spCurrency    = myTokenSymbol
         , spToken       = myTokenName
@@ -106,7 +106,7 @@ scenario2 = do
     void $ Emulator.waitUntilSlot 11  
 
     callEndpoint @"close" h1 $ CloseParams 
-        { cpCurrency    = myTokenSymbolfor
+        { cpCurrency    = myTokenSymbol
         , cpToken       = myTokenName
         }
     void $ Emulator.waitNSlots 1  
