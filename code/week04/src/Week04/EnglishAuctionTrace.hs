@@ -145,9 +145,12 @@ initialDistribution  = Map.fromList [(w1, lovelaceValueOf 1000000000 <> singleto
                                     ,(w3, lovelaceValueOf 1000000000)
                                     ] 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 "T"
 >>>>>>> use utility functions for value creation
+=======
+>>>>>>> fix typo
 w1 :: Wallet 
 w1 = Wallet 1
 
