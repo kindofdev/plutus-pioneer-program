@@ -2,23 +2,21 @@
 {-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Week04.Trace where
+module Week04.EnglishAuctionTrace where
 
 import Control.Monad.Freer.Extras as Extras
 import Data.Default               (Default (..))
 import Data.Functor               (void)
-import Ledger
 import Ledger.TimeSlot
 import Plutus.Trace.Emulator      as Emulator
 import Wallet.Emulator.Wallet
 
 import Plutus.Contract.Trace (InitialDistribution)
+-- import qualified Plutus.V1.Ledger.Value as V
+import Plutus.V1.Ledger.Value
+import Plutus.V1.Ledger.Ada
 
-import PlutusTx.AssocMap                   as M
-import Data.Map                   as Map
-
-import Ledger.Ada
-import Ledger.Value
+import Data.Map as Map ( fromList )
 
 import Week04.UpdatedEnglishAuction
 
@@ -142,11 +140,11 @@ scenario3 = do
     Extras.logInfo @String "DONE"    
 
 initialDistribution :: InitialDistribution 
-initialDistribution = Map.fromList [ (w1, Value $ M.fromList [oneThousandAda, oneToken])
-                                   , (w2, Value $ M.fromList [oneThousandAda])
-                                   , (w3, Value $ M.fromList [oneThousandAda])
-                                   ]
-
+initialDistribution  = Map.fromList [(w1, lovelaceValueOf 1000000000 <> singleton myTokenSymbol myTokenName 1)
+                                    ,(w2, lovelaceValueOf 1000000000)
+                                    ,(w3, lovelaceValueOf 1000000000)
+                                    ] 
+"T"
 w1 :: Wallet 
 w1 = Wallet 1
 
@@ -155,12 +153,6 @@ w2 = Wallet 2
 
 w3 :: Wallet 
 w3 = Wallet 3
-
-oneThousandAda :: (CurrencySymbol, M.Map TokenName Integer)
-oneThousandAda = (adaSymbol, M.fromList [(adaToken, 1000000000)])
-
-oneToken :: (CurrencySymbol, M.Map TokenName Integer) 
-oneToken = (myTokenSymbol, M.fromList [(myTokenName, 1)])
 
 myTokenSymbol :: CurrencySymbol 
 myTokenSymbol = CurrencySymbol "66"

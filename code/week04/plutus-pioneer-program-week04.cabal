@@ -18,6 +18,7 @@ library
                      , Week04.Solution
                      , Week04.Trace
                      , Week04.Writer
+                     , Week04.UpdatedEnglishAuction
   other-modules:       Week04.Vesting
   build-depends:       aeson
                      , base ^>=4.14.1.0
