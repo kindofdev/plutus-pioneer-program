@@ -144,7 +144,6 @@ initialDistribution  = Map.fromList [(w1, lovelaceValueOf 1000000000 <> singleto
                                     ,(w2, lovelaceValueOf 1000000000)
                                     ,(w3, lovelaceValueOf 1000000000)
                                     ] 
-"T"
 w1 :: Wallet 
 w1 = Wallet 1
 
