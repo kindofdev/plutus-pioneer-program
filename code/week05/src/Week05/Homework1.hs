@@ -13,7 +13,6 @@
 module Week05.Homework1 where
 
 import           Control.Monad              hiding (fmap)
-import           Control.Monad.Freer.Extras as Extras
 import           Data.Aeson                 (ToJSON, FromJSON)
 import           Data.Default               (Default (..))
 import           Data.Text                  (Text)
@@ -28,10 +27,10 @@ import           Ledger.Constraints         as Constraints
 import           Ledger.TimeSlot
 import qualified Ledger.Typed.Scripts       as Scripts
 import           Ledger.Value               as Value
-import           Playground.Contract        (printJson, printSchemas, ensureKnownCurrencies, stage, ToSchema)
+import           Playground.Contract        (ToSchema)
 import           Playground.TH              (mkKnownCurrencies, mkSchemaDefinitions)
 import           Playground.Types           (KnownCurrency (..))
-import           Prelude                    (IO, Semigroup (..), Show (..), String, undefined)
+import           Prelude                    (IO, Semigroup (..), Show (..), String, fromIntegral)
 import           Text.Printf                (printf)
 import           Wallet.Emulator.Wallet
 
@@ -39,13 +38,30 @@ import           Wallet.Emulator.Wallet
 -- This policy should only allow minting (or burning) of tokens if the owner of the specified PubKeyHash
 -- has signed the transaction and if the specified deadline has not passed.
 mkPolicy :: PubKeyHash -> POSIXTime -> () -> ScriptContext -> Bool
-mkPolicy pkh deadline () ctx = True -- FIX ME!
+mkPolicy pkh deadline () ctx = traceIfFalse "not signed properly" checkSign &&
+                               traceIfFalse "deadline reached" checkDeadline
+  where 
+      info :: TxInfo
+      info = scriptContextTxInfo ctx
+
+      checkSign :: Bool
+      checkSign = txSignedBy info pkh
+
+      checkDeadline :: Bool
+      checkDeadline = to deadline `contains` txInfoValidRange info 
+
 
 policy :: PubKeyHash -> POSIXTime -> Scripts.MintingPolicy
-policy pkh deadline = undefined -- IMPLEMENT ME!
+policy pkh deadline = mkMintingPolicyScript $
+    $$(PlutusTx.compile [|| \pkh' deadline' -> Scripts.wrapMintingPolicy $ mkPolicy pkh' deadline' ||])
+    `PlutusTx.applyCode`
+    PlutusTx.liftCode pkh
+    `PlutusTx.applyCode`
+    PlutusTx.liftCode deadline
+  
 
 curSymbol :: PubKeyHash -> POSIXTime -> CurrencySymbol
-curSymbol pkh deadline = undefined -- IMPLEMENT ME!
+curSymbol pkh deadline = scriptCurrencySymbol $ policy pkh deadline
 
 data MintParams = MintParams
     { mpTokenName :: !TokenName
@@ -65,7 +81,9 @@ mint mp = do
         else do
             let val     = Value.singleton (curSymbol pkh deadline) (mpTokenName mp) (mpAmount mp)
                 lookups = Constraints.mintingPolicy $ policy pkh deadline
-                tx      = Constraints.mustMintValue val <> Constraints.mustValidateIn (to $ now + 5000)
+                tx      = Constraints.mustMintValue val <> Constraints.mustValidateIn (to $ deadline - fromIntegral (scSlotLength def))
+                -- tx      = Constraints.mustMintValue val <> Constraints.mustValidateIn (to $ now + 5000)
+                -- tx      = Constraints.mustMintValue val <> Constraints.mustValidateIn (to deadline)
             ledgerTx <- submitTxConstraintsWith @Void lookups tx
             void $ awaitTxConfirmed $ txId ledgerTx
             Contract.logInfo @String $ printf "forged %s" (show val)
@@ -96,3 +114,47 @@ test = runEmulatorTraceIO $ do
         , mpAmount    = 555
         }
     void $ Emulator.waitNSlots 1
+
+test2 :: IO ()
+test2 = runEmulatorTraceIO $ do
+    let tn        = "ABC"
+    let tn'       = "DEF"
+        deadline = slotToBeginPOSIXTime def 10
+    h <- activateContractWallet (Wallet 1) endpoints
+    callEndpoint @"mint" h $ MintParams
+        { mpTokenName = tn
+        , mpDeadline  = deadline
+        , mpAmount    = 555
+        }
+    void $ Emulator.waitNSlots 1
+    callEndpoint @"mint" h $ MintParams
+        { mpTokenName = tn'
+        , mpDeadline  = deadline
+        , mpAmount    = 333
+        }
+    void $ Emulator.waitUntilSlot 15
+    callEndpoint @"mint" h $ MintParams
+        { mpTokenName = tn
+        , mpDeadline  = deadline
+        , mpAmount    = 222
+        }
+    void $ Emulator.waitNSlots 1
+
+test3 :: IO ()
+test3 = runEmulatorTraceIO $ do
+    let tn        = "ABC"
+        deadline1 = slotToBeginPOSIXTime def 10
+        deadline2 = slotToBeginPOSIXTime def 17
+    h <- activateContractWallet (Wallet 1) endpoints
+    callEndpoint @"mint" h $ MintParams
+        { mpTokenName = tn
+        , mpDeadline  = deadline1
+        , mpAmount    = 555
+        }
+    void $ Emulator.waitUntilSlot 15
+    callEndpoint @"mint" h $ MintParams
+        { mpTokenName = tn
+        , mpDeadline  = deadline2
+        , mpAmount    = 333
+        }
+    void $ Emulator.waitNSlots 1    
