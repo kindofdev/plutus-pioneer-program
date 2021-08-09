@@ -12,8 +12,10 @@ library
   hs-source-dirs:      src
   exposed-modules:     Week07.EvenOdd
                      , Week07.StateMachine
+                     , Week07.RockPaperScissors
                      , Week07.Test
                      , Week07.TestStateMachine
+                     , Week07.TestRockPaperScissors
   build-depends:       aeson
                      , base ^>=4.14.1.0
                      , containers
