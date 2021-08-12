@@ -18,8 +18,13 @@ module Week07.RockPaperScissors
     , SecondParams (..)
     , GameSchema
     , Last (..)
+<<<<<<< HEAD
     , Text
     , ThreadToken
+=======
+    , ThreadToken
+    , Text
+>>>>>>> 81eaca63df68b50c9d2674ad115a467381ee32c0
     , endpoints
     ) where
 
@@ -37,6 +42,10 @@ import           Plutus.Contract              as Contract
 import           Plutus.Contract.StateMachine
 import qualified PlutusTx
 import           PlutusTx.Prelude             hiding (Semigroup(..), check, unless)
+<<<<<<< HEAD
+=======
+import           Playground.Contract          (ToSchema)
+>>>>>>> 81eaca63df68b50c9d2674ad115a467381ee32c0
 import           Prelude                      (Semigroup (..), Show (..), String)
 import qualified Prelude
 
@@ -52,7 +61,11 @@ data Game = Game
 PlutusTx.makeLift ''Game
 
 data GameChoice = Rock | Paper | Scissors
+<<<<<<< HEAD
     deriving (Show, Generic, FromJSON, ToJSON, Prelude.Eq, Prelude.Ord)
+=======
+    deriving (Show, Generic, FromJSON, ToJSON, ToSchema, Prelude.Eq, Prelude.Ord)
+>>>>>>> 81eaca63df68b50c9d2674ad115a467381ee32c0
 
 instance Eq GameChoice where
     {-# INLINABLE (==) #-}
@@ -70,6 +83,10 @@ beats Paper    Rock     = True
 beats Scissors Paper    = True
 beats _        _        = False
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 81eaca63df68b50c9d2674ad115a467381ee32c0
 data GameDatum = GameDatum ByteString (Maybe GameChoice) | Finished
     deriving Show
 
@@ -100,6 +117,7 @@ gameDatum o f = do
 {-# INLINABLE transition #-}
 transition :: Game -> State GameDatum -> GameRedeemer -> Maybe (TxConstraints Void Void, State GameDatum)
 transition game s r = case (stateValue s, stateData s, r) of
+<<<<<<< HEAD
     (v, GameDatum bs Nothing, Play c)
         | lovelaces v == gStake game             -> Just ( Constraints.mustBeSignedBy (gSecond game)                    <>
                                                            Constraints.mustValidateIn (to $ gPlayDeadline game)
@@ -130,6 +148,38 @@ transition game s r = case (stateValue s, stateData s, r) of
                                                          , State Finished mempty
                                                          )
     _                                            -> Nothing
+=======
+    (v, GameDatum bs Nothing, Play c)          -- PLAYER 2 PLAYS
+        | lovelaces v == gStake game           -> Just ( Constraints.mustBeSignedBy (gSecond game)                    <>
+                                                         Constraints.mustValidateIn (to $ gPlayDeadline game)
+                                                       , State (GameDatum bs $ Just c) (lovelaceValueOf $ 2 * gStake game)
+                                                       )
+    (v, GameDatum _ (Just cs), Reveal _ cf)    -- PLAYER 1 WINS
+        | lovelaces v == (2 * gStake game) && 
+          cf `beats` cs                        -> Just ( Constraints.mustBeSignedBy (gFirst game)                     <>
+                                                         Constraints.mustValidateIn (to $ gRevealDeadline game)
+                                                       , State Finished mempty
+                                                       )
+    (v, GameDatum _ (Just cs), Reveal _ cf)    -- DRAW
+        | lovelaces v == (2 * gStake game) && 
+          cf == cs                             -> Just ( Constraints.mustBeSignedBy (gFirst game)                                   <>
+                                                         Constraints.mustValidateIn (to $ gRevealDeadline game)                     <>
+                                                         Constraints.mustPayToPubKey (gFirst game) (lovelaceValueOf $ gStake game)  <>
+                                                         Constraints.mustPayToPubKey (gSecond game) (lovelaceValueOf $ gStake game) 
+                                                       , State Finished mempty
+                                                       )                                                 
+    (v, GameDatum _ Nothing, ClaimFirst)       -- PLAYER 1 CLAIMS HER STAKE
+        | lovelaces v == gStake game           -> Just ( Constraints.mustBeSignedBy (gFirst game)                     <>
+                                                         Constraints.mustValidateIn (from $ 1 + gPlayDeadline game)
+                                                       , State Finished mempty
+                                                       )
+    (v, GameDatum _ (Just _), ClaimSecond)     -- PLAYER 2 WINS
+        | lovelaces v == (2 * gStake game)     -> Just ( Constraints.mustBeSignedBy (gSecond game)                    <>
+                                                         Constraints.mustValidateIn (from $ 1 + gRevealDeadline game)
+                                                       , State Finished mempty
+                                                       )
+    _                                          -> Nothing
+>>>>>>> 81eaca63df68b50c9d2674ad115a467381ee32c0
 
 {-# INLINABLE final #-}
 final :: GameDatum -> Bool
@@ -138,6 +188,7 @@ final _        = False
 
 {-# INLINABLE check #-}
 check :: ByteString -> ByteString -> ByteString -> GameDatum -> GameRedeemer -> ScriptContext -> Bool
+<<<<<<< HEAD
 check bsRock' bsPaper' bsScissors' (GameDatum bs (Just _)) (Reveal nonce c) _ =
     sha2_256 (nonce `concatenate` toBS c) == bs
   where
@@ -145,6 +196,15 @@ check bsRock' bsPaper' bsScissors' (GameDatum bs (Just _)) (Reveal nonce c) _ =
     toBS Rock     = bsRock'
     toBS Paper    = bsPaper'
     toBS Scissors = bsScissors'
+=======
+check bsRock' bsPaper' bsScissors' (GameDatum bs (Just _)) (Reveal nonce cf) _ =
+    sha2_256 (nonce `concatenate` f cf) == bs
+  where 
+      f :: GameChoice -> ByteString
+      f Rock = bsRock'
+      f Paper = bsPaper'
+      f Scissors = bsScissors'
+>>>>>>> 81eaca63df68b50c9d2674ad115a467381ee32c0
 check _ _ _ _ _ _ = True
 
 {-# INLINABLE gameStateMachine #-}
@@ -197,7 +257,11 @@ data FirstParams = FirstParams
     , fpRevealDeadline :: !POSIXTime
     , fpNonce          :: !ByteString
     , fpChoice         :: !GameChoice
+<<<<<<< HEAD
     } deriving (Show, Generic, FromJSON, ToJSON)
+=======
+    } deriving (Show, Generic, FromJSON, ToJSON, ToSchema)
+>>>>>>> 81eaca63df68b50c9d2674ad115a467381ee32c0
 
 mapError' :: Contract w s SMContractError a -> Contract w s Text a
 mapError' = mapError $ pack . show
@@ -205,6 +269,14 @@ mapError' = mapError $ pack . show
 waitUntilTimeHasPassed :: AsContractError e => POSIXTime -> Contract w s e ()
 waitUntilTimeHasPassed t = void $ awaitTime t >> waitNSlots 1
 
+<<<<<<< HEAD
+=======
+mapChoice :: GameChoice -> ByteString 
+mapChoice Rock     = bsRock
+mapChoice Paper    = bsPaper
+mapChoice Scissors = bsScissors
+
+>>>>>>> 81eaca63df68b50c9d2674ad115a467381ee32c0
 firstGame :: forall s. FirstParams -> Contract (Last ThreadToken) s Text ()
 firstGame fp = do
     pkh <- pubKeyHash <$> Contract.ownPubKey
@@ -220,11 +292,15 @@ firstGame fp = do
         client = gameClient game
         v      = lovelaceValueOf (fpStake fp)
         c      = fpChoice fp
+<<<<<<< HEAD
         x      = case c of
                     Rock     -> bsRock
                     Paper    -> bsPaper
                     Scissors -> bsScissors
         bs     = sha2_256 $ fpNonce fp `concatenate` x
+=======
+        bs     = sha2_256 $ fpNonce fp `concatenate` mapChoice c
+>>>>>>> 81eaca63df68b50c9d2674ad115a467381ee32c0
     void $ mapError' $ runInitialise client (GameDatum bs Nothing) v
     logInfo @String $ "made first move: " ++ show (fpChoice fp)
     tell $ Last $ Just tt
@@ -241,10 +317,22 @@ firstGame fp = do
                 void $ mapError' $ runStep client ClaimFirst
                 logInfo @String "first player reclaimed stake"
 
+<<<<<<< HEAD
             GameDatum _ (Just c') | c `beats` c' || c' == c -> do
                 logInfo @String "second player played and lost or drew"
                 void $ mapError' $ runStep client $ Reveal (fpNonce fp) c
                 logInfo @String "first player revealed and won or drew"
+=======
+            GameDatum _ (Just c') | c `beats` c' -> do   
+                logInfo @String "second player played and lost"
+                void $ mapError' $ runStep client $ Reveal (fpNonce fp) c
+                logInfo @String "first player revealed and won"
+
+            GameDatum _ (Just c') | c == c' -> do   
+                logInfo @String "second player played and draw"
+                void $ mapError' $ runStep client $ Reveal (fpNonce fp) c
+                logInfo @String "first player revealed and first/second players reclaimed stake"    
+>>>>>>> 81eaca63df68b50c9d2674ad115a467381ee32c0
 
             _ -> logInfo @String "second player played and won"
 
@@ -296,4 +384,8 @@ endpoints :: Contract (Last ThreadToken) GameSchema Text ()
 endpoints = (first `select` second) >> endpoints
   where
     first  = endpoint @"first"  >>= firstGame
+<<<<<<< HEAD
     second = endpoint @"second" >>= secondGame
+=======
+    second = endpoint @"second" >>= secondGame
+>>>>>>> 81eaca63df68b50c9d2674ad115a467381ee32c0
