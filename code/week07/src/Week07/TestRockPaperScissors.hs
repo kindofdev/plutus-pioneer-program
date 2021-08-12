@@ -14,30 +14,29 @@
 
 module Week07.TestRockPaperScissors where
 
-import           Control.Monad              hiding (fmap)
-import           Control.Monad.Freer.Extras as Extras
-import           Data.Default               (Default (..))
-import           Ledger
-import           Ledger.TimeSlot
-import           Plutus.Trace.Emulator      as Emulator
-import           PlutusTx.Prelude
-import           Prelude                    (IO, Show (..))
-import           Wallet.Emulator.Wallet
+import Control.Monad              hiding (fmap)
+import Control.Monad.Freer.Extras as Extras
+import Data.Default               (Default (..))
+import Ledger
+import Ledger.TimeSlot
+import Plutus.Trace.Emulator      as Emulator
+import PlutusTx.Prelude
+import Prelude                    (IO, Show (..))
+import Wallet.Emulator.Wallet
 
-import           Week07.RockPaperScissors
+import Week07.RockPaperScissors
 
 test :: IO ()
 test = do
-    test'  Rock     Rock
-    test'  Rock     Paper
-    test'  Rock     Scissors
-    test'  Scissors Rock
-    test'  Scissors Paper
-    test'  Scissors Scissors
-    test'  Paper    Rock
-    test'  Paper    Paper
-    test'  Paper    Scissors
-    test'' Rock 
+    test' Rock     Rock
+    test' Rock     Paper
+    test' Rock     Scissors
+    test' Paper    Rock
+    test' Paper    Paper
+    test' Paper    Scissors
+    test' Scissors Rock
+    test' Scissors Paper
+    test' Scissors Scissors
 
 test' :: GameChoice -> GameChoice -> IO ()
 test' c1 c2 = runEmulatorTraceIO $ myTrace c1 c2
@@ -117,4 +116,3 @@ myTrace' c1 = do
 
     callEndpoint @"first" h1 fp
     void $ Emulator.waitNSlots 10
-

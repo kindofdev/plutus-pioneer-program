@@ -18,8 +18,8 @@ module Week07.RockPaperScissors
     , SecondParams (..)
     , GameSchema
     , Last (..)
-    , ThreadToken
     , Text
+    , ThreadToken
     , endpoints
     ) where
 
@@ -146,7 +146,6 @@ check bsRock' bsPaper' bsScissors' (GameDatum bs (Just _)) (Reveal nonce cf) _ =
       f Rock = bsRock'
       f Paper = bsPaper'
       f Scissors = bsScissors'
-check _ _ _ _ _ _ = True
 
 {-# INLINABLE gameStateMachine #-}
 gameStateMachine :: Game -> ByteString -> ByteString -> ByteString -> StateMachine GameDatum GameRedeemer
