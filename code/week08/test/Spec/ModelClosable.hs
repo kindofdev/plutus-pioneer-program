@@ -45,7 +45,6 @@ data TSState = TSState
     { _tssPrice    :: !Integer
     , _tssLovelace :: !Integer
     , _tssToken    :: !Integer
-    , _tssClose    :: !Bool
     } deriving Show
 
 makeLenses ''TSState
@@ -86,7 +85,7 @@ instance ContractModel TSModel where
     initialState = TSModel Map.empty
 
     nextState (Start w) = do
-        (tsModel . at w) $= Just (TSState 0 0 0 False)
+        (tsModel . at w) $= Just (TSState 0 0 0)
         wait 1
 
     nextState (SetPrice v w p) = do
@@ -140,9 +139,7 @@ instance ContractModel TSModel where
                         l = lovelaceValueOf $ t ^. tssLovelace
                         n = assetClassValue (tokens Map.! w) $ t ^. tssToken
                     deposit v $ l <> n
-                    (tsModel . ix v . tssLovelace) $= 0
-                    (tsModel . ix v . tssToken)    $= 0
-                    (tsModel . ix v . tssClose)    $= True
+                    (tsModel . at v) $= Nothing
                 _      -> return ()   
         wait 1 
 
@@ -155,22 +152,17 @@ instance ContractModel TSModel where
         (Close v w)        -> callEndpoint @"close"      (h $ UseKey v w) ()                                                   >> delay 1
 
     precondition s (Start w)          = Prelude.not $ hasStarted' s w 
-    precondition s (SetPrice v _ _)   = isOpened s v
-    precondition s (AddTokens v _ _)  = isOpened s v
-    precondition s (BuyTokens v _ _)  = isOpened s v
-    precondition s (Withdraw v _ _ _) = isOpened s v 
-    precondition s (Close v _ )       = isOpened s v
+    precondition s (SetPrice v _ _)   = hasStarted' s v
+    precondition s (AddTokens v _ _)  = hasStarted' s v
+    precondition s (BuyTokens v _ _)  = hasStarted' s v
+    precondition s (Withdraw v _ _ _) = hasStarted' s v 
+    precondition s (Close v _ )       = hasStarted' s v
 
 deriving instance Eq (ContractInstanceKey TSModel w s e)
 deriving instance Show (ContractInstanceKey TSModel w s e)
 
 hasStarted' :: ModelState TSModel -> Wallet -> Bool
 hasStarted' s v = isJust $ getTSState' s v
-
-isOpened :: ModelState TSModel -> Wallet -> Bool
-isOpened s v = fromMaybe False $ do
-      ws <- getTSState' s v
-      return $ Prelude.not $ ws ^. tssClose    
 
 getTSState' :: ModelState TSModel -> Wallet -> Maybe TSState
 getTSState' s v = s ^. contractState . tsModel . at v
