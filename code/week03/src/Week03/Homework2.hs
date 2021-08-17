@@ -40,6 +40,7 @@ mkValidator :: PubKeyHash -> POSIXTime -> () -> ScriptContext -> Bool
 mkValidator phk deadline () ctx = traceIfFalse "beneficiary's signature missing" signedByBeneficiary &&
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                                   traceIfFalse "deadline not reached" deadlineReached
 =======
                          traceIfFalse "deadline not reached" deadlineReached
@@ -47,6 +48,9 @@ mkValidator phk deadline () ctx = traceIfFalse "beneficiary's signature missing"
 =======
                                   traceIfFalse "deadline not reached" deadlineReached
 >>>>>>> indent code
+=======
+                                  traceIfFalse "deadline not reached" deadlineReached
+>>>>>>> 7f8d7c0964caee9a56cf1ff40d0e5b8d7a74719f
   where
     info :: TxInfo
     info = scriptContextTxInfo ctx

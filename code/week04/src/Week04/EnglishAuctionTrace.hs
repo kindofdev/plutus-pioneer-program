@@ -12,6 +12,7 @@ import Plutus.Trace.Emulator      as Emulator
 import Wallet.Emulator.Wallet
 
 import Plutus.Contract.Trace (InitialDistribution)
+<<<<<<< HEAD
 
 import PlutusTx.AssocMap                   as M
 import Data.Map                   as Map
@@ -22,6 +23,17 @@ import Ledger.Value
 import Week04.UpdatedEnglishAuction
 
 -- Token goes to w3 (bid w3 > bid w2 > minimum bid)
+=======
+-- import qualified Plutus.V1.Ledger.Value as V
+import Plutus.V1.Ledger.Value
+import Plutus.V1.Ledger.Ada
+
+import Data.Map as Map ( fromList )
+
+import Week04.UpdatedEnglishAuction
+
+-- Token goes to w3 (minimum bid < bid w2 < bid w3 )
+>>>>>>> 7f8d7c0964caee9a56cf1ff40d0e5b8d7a74719f
 {- 
     Final balances
     Wallet 1: 
