@@ -39,10 +39,14 @@ import           Text.Printf          (printf)
 mkValidator :: PubKeyHash -> POSIXTime -> () -> ScriptContext -> Bool
 mkValidator phk deadline () ctx = traceIfFalse "beneficiary's signature missing" signedByBeneficiary &&
 <<<<<<< HEAD
+<<<<<<< HEAD
                                   traceIfFalse "deadline not reached" deadlineReached
 =======
                          traceIfFalse "deadline not reached" deadlineReached
 >>>>>>> week2 + week3 homework
+=======
+                                  traceIfFalse "deadline not reached" deadlineReached
+>>>>>>> indent code
   where
     info :: TxInfo
     info = scriptContextTxInfo ctx
