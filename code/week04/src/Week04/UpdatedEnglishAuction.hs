@@ -280,10 +280,17 @@ bid BidParams{..} = do
                   Constraints.unspentOutputs (Map.singleton oref o)
         tx      = case adHighestBid of
                     Nothing      -> mustPayToTheScript d' v                            <>
+<<<<<<< HEAD
                                 {-  This expression (from week1) FAILS with Plutus checkout week4
                                     mustValidateIn (to $ aDeadline adAuction)       <>
                                 -}
                                     mustValidateIn (to now)          <>  -- Follow same approach as Homework1 week3 
+=======
+                                {-  This expression from week1 FAILS with Plutus checkout week4
+                                    mustValidateIn (to $ aDeadline adAuction)       <>
+                                -}
+                                    mustValidateIn (to now)          <>  -- Same approach as Homework1 week3 
+>>>>>>> add EnglishAuction trace exercise
                                     mustSpendScriptOutput oref r
                     Just Bid{..} -> mustPayToTheScript d' v                            <>
                                     mustPayToPubKey bBidder (Ada.lovelaceValueOf bBid) <>

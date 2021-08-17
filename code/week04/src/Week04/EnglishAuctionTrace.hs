@@ -2,16 +2,25 @@
 {-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+<<<<<<< HEAD
 module Week04.EnglishAuctionTrace where
+=======
+module Week04.Trace where
+>>>>>>> add EnglishAuction trace exercise
 
 import Control.Monad.Freer.Extras as Extras
 import Data.Default               (Default (..))
 import Data.Functor               (void)
+<<<<<<< HEAD
+=======
+import Ledger
+>>>>>>> add EnglishAuction trace exercise
 import Ledger.TimeSlot
 import Plutus.Trace.Emulator      as Emulator
 import Wallet.Emulator.Wallet
 
 import Plutus.Contract.Trace (InitialDistribution)
+<<<<<<< HEAD
 -- import qualified Plutus.V1.Ledger.Value as V
 import Plutus.V1.Ledger.Value
 import Plutus.V1.Ledger.Ada
@@ -21,6 +30,18 @@ import Data.Map as Map ( fromList )
 import Week04.UpdatedEnglishAuction
 
 -- Token goes to w3 (minimum bid < bid w2 < bid w3 )
+=======
+
+import PlutusTx.AssocMap                   as M
+import Data.Map                   as Map
+
+import Ledger.Ada
+import Ledger.Value
+
+import Week04.UpdatedEnglishAuction
+
+-- Token goes to w3 (bid w3 > bid w2 > minimum bid)
+>>>>>>> add EnglishAuction trace exercise
 {- 
     Final balances
     Wallet 1: 
@@ -65,7 +86,11 @@ scenario1 = do
     void $ Emulator.waitNSlots 1  
     Extras.logInfo @String "DONE"
 
+<<<<<<< HEAD
 -- Token goes to w2 (w3 bid < minimum bid < w2 bid)
+=======
+-- Token goes to w2 (w3 bid < minimum bid)
+>>>>>>> add EnglishAuction trace exercise
 {-
     Final balances
     Wallet 1: 
@@ -110,7 +135,11 @@ scenario2 = do
     void $ Emulator.waitNSlots 1  
     Extras.logInfo @String "DONE"
 
+<<<<<<< HEAD
 -- Token goes back to w1 (no bids)
+=======
+-- Token goes to w1 (no bids)
+>>>>>>> add EnglishAuction trace exercise
 {-
     Final balances
     Wallet 1: 
@@ -140,6 +169,7 @@ scenario3 = do
     Extras.logInfo @String "DONE"    
 
 initialDistribution :: InitialDistribution 
+<<<<<<< HEAD
 initialDistribution  = Map.fromList [(w1, lovelaceValueOf 1000000000 <> singleton myTokenSymbol myTokenName 1)
                                     ,(w2, lovelaceValueOf 1000000000)
                                     ,(w3, lovelaceValueOf 1000000000)
@@ -151,6 +181,13 @@ initialDistribution  = Map.fromList [(w1, lovelaceValueOf 1000000000 <> singleto
 >>>>>>> use utility functions for value creation
 =======
 >>>>>>> fix typo
+=======
+initialDistribution = Map.fromList [ (w1, Value $ M.fromList [oneThousandAda, oneToken])
+                                   , (w2, Value $ M.fromList [oneThousandAda])
+                                   , (w3, Value $ M.fromList [oneThousandAda])
+                                   ]
+
+>>>>>>> add EnglishAuction trace exercise
 w1 :: Wallet 
 w1 = Wallet 1
 
@@ -160,6 +197,15 @@ w2 = Wallet 2
 w3 :: Wallet 
 w3 = Wallet 3
 
+<<<<<<< HEAD
+=======
+oneThousandAda :: (CurrencySymbol, M.Map TokenName Integer)
+oneThousandAda = (adaSymbol, M.fromList [(adaToken, 1000000000)])
+
+oneToken :: (CurrencySymbol, M.Map TokenName Integer) 
+oneToken = (myTokenSymbol, M.fromList [(myTokenName, 1)])
+
+>>>>>>> add EnglishAuction trace exercise
 myTokenSymbol :: CurrencySymbol 
 myTokenSymbol = CurrencySymbol "66"
 
