@@ -117,7 +117,3 @@ myTrace' c1 = do
 
     callEndpoint @"first" h1 fp
     void $ Emulator.waitNSlots 10
-<<<<<<< HEAD
-
-=======
->>>>>>> 7f8d7c0964caee9a56cf1ff40d0e5b8d7a74719f

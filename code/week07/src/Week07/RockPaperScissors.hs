@@ -146,10 +146,7 @@ check bsRock' bsPaper' bsScissors' (GameDatum bs (Just _)) (Reveal nonce cf) _ =
       f Rock = bsRock'
       f Paper = bsPaper'
       f Scissors = bsScissors'
-<<<<<<< HEAD
 check _ _ _ _ _ _ = True
-=======
->>>>>>> 7f8d7c0964caee9a56cf1ff40d0e5b8d7a74719f
 
 {-# INLINABLE gameStateMachine #-}
 gameStateMachine :: Game -> ByteString -> ByteString -> ByteString -> StateMachine GameDatum GameRedeemer
